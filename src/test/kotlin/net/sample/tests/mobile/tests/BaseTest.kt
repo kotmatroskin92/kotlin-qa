@@ -22,12 +22,10 @@ open class BaseTest : AnnotationSpec(){
         mobileDriver = DriverManager.getMobileDriver()!!
         mobileDriver.runApp(Activity(properties.getProperty("capabilities.package"),
             properties.getProperty("capabilities.activity")))
-//        MobileVideoRecorder.startRecording(mobileDriver);
     }
 
     @AnnotationSpec.AfterClass
     fun tearDownAppium() {
-//        val destinationPath: = MobileVideoRecorder.stopRecording(mobileDriver)
         DriverManager.closeAllOpenedBrowsers()
         DriverManager.closeDefaultMobileDriver()
     }

@@ -10,10 +10,10 @@ import java.lang.reflect.ParameterizedType
 
 class ScreenFactory {
     companion object {
-        fun initElements(driver: SeleniumDriver, pageClass: Class<Screen>): Screen {
+        fun <T : Screen> initElements(driver: SeleniumDriver, pageClass: Class<T>): T {
             val page = instantiatePage(pageClass)
             initCustomElements(driver, page)
-            val list = getSuperClasses(page.javaClass)
+            val list = getSuperClasses(page::class.java)
             for (superClass in list) {
                 initFields(page, superClass!!.declaredFields, driver)
             }
@@ -27,14 +27,14 @@ class ScreenFactory {
                         .getConstructor()
                     constructor.newInstance()
                 } catch (e: NoSuchMethodException) {
-                    pageClass.newInstance()
+                    pageClass.getDeclaredConstructor().newInstance()
                 }
             } catch (e: Exception) {
                 throw RuntimeException(e)
             }
         }
 
-        private fun initFields(screen: Screen, fields: Array<Field>, driver: SeleniumDriver) {
+        private fun <T : Screen> initFields(screen: T, fields: Array<Field>, driver: SeleniumDriver) {
             for (field in fields) {
                 try {
                     val fieldClass = field.type
@@ -62,11 +62,11 @@ class ScreenFactory {
         }
 
 
-        fun initCustomElements(driver: SeleniumDriver, screen: Screen) {
+        private fun <T : Screen> initCustomElements(driver: SeleniumDriver, screen: T) {
             initFields(screen, screen.javaClass.declaredFields, driver)
         }
 
-        fun getSuperClasses(_clazz: Class<*>): List<Class<*>?> {
+        private fun getSuperClasses(_clazz: Class<*>): List<Class<*>?> {
             var clazz = _clazz
             val classList: MutableList<Class<*>?> = ArrayList()
             var superclass = clazz.superclass
@@ -88,21 +88,27 @@ class ScreenFactory {
             var by: By? = null
             if (null != annotation) {
                 val id: String = annotation.id
-                var xpath: String = annotation.xpath
+                val xpath: String = annotation.xpath
                 val accessibility: String = annotation.accessibility
                 val uiAutomator: String = annotation.uiAutomator
                 val tagName: String = annotation.tagName
-                if (!id.isEmpty()) {
-                    by = AppiumBy.id(id)
-                } else if (!xpath.isEmpty()) {
-//                xpath = ConfigUtils.getMobileLocale(xpath)
-                    by = AppiumBy.xpath(xpath)
-                } else if (!accessibility.isEmpty()) {
-                    by = AppiumBy.accessibilityId(accessibility)
-                } else if (!uiAutomator.isEmpty()) {
-                    by = AppiumBy.androidUIAutomator(uiAutomator)
-                } else if (!tagName.isEmpty()) {
-                    by = AppiumBy.androidViewTag(tagName)
+                when {
+                    id.isNotEmpty() -> {
+                        by = AppiumBy.id(id)
+                    }
+                    xpath.isNotEmpty() -> {
+            //                xpath = ConfigUtils.getMobileLocale(xpath)
+                        by = AppiumBy.xpath(xpath)
+                    }
+                    accessibility.isNotEmpty() -> {
+                        by = AppiumBy.accessibilityId(accessibility)
+                    }
+                    uiAutomator.isNotEmpty() -> {
+                        by = AppiumBy.androidUIAutomator(uiAutomator)
+                    }
+                    tagName.isNotEmpty() -> {
+                        by = AppiumBy.androidViewTag(tagName)
+                    }
                 }
             }
             return by

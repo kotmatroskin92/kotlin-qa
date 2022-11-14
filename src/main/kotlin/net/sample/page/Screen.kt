@@ -5,10 +5,10 @@ import net.sample.browser.SeleniumDriver
 
 abstract class Screen {
 
-    val mobileDriver: SeleniumDriver? = DriverManager.getMobileDriver()
+    val mobileDriver: SeleniumDriver = DriverManager.getMobileDriver()!!
 
     init {
-        ScreenFactory.initElements(mobileDriver!!, this.javaClass)
+        ScreenFactory.initElements(mobileDriver, this.javaClass)
     }
 
     abstract fun waitForScreenIsLoaded()
